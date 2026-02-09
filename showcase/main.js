@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
         observer.observe(el);
     });
 
-    // Custom CSS for visible state (simplified logic)
+    // Custom CSS for visible state
     const style = document.createElement('style');
     style.textContent = `
         .visible {
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
     document.head.appendChild(style);
 
-    // Gallery Lightbox Effect (Simplified)
+    // Gallery Lightbox Effect
     const galleryItems = document.querySelectorAll('.gallery-item');
     galleryItems.forEach(item => {
         item.addEventListener('click', () => {
@@ -375,7 +375,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 canvas.width = demoVideo.clientWidth;
                 canvas.height = demoVideo.clientHeight;
 
-                // Add Overlay Explanation
+                // Remove existing overlay explanation
+                const oldOverlay = demoVideo.parentNode.querySelector('div[style*="border-left"]');
+                if (oldOverlay) oldOverlay.remove();
+
+                // Add New Overlay Explanation
                 const demoOverlay = document.createElement('div');
                 demoOverlay.style.cssText = `
                     position: absolute;
@@ -388,9 +392,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     font-size: 14px;
                     pointer-events: none;
                     z-index: 20;
-                    border-left: 4px solid #facc15;
+                    border-left: 4px solid #3b82f6;
                 `;
-                demoOverlay.innerHTML = '<strong>DEMO MODE:</strong><br>Left Side = <span style="color:#4ade80">Secure</span> | Right Side = <span style="color:#f87171">Danger</span>';
+                demoOverlay.innerHTML = '<strong>DEMO MODE:</strong><br>Simulating PPE Checks...';
                 demoVideo.parentNode.appendChild(demoOverlay);
 
                 detectFrame(model, demoVideo, ctx, canvas);
@@ -423,31 +427,23 @@ document.addEventListener('DOMContentLoaded', () => {
             // Scaling factors
             const scaleX = canvas.width / video.videoWidth;
             const scaleY = canvas.height / video.videoHeight;
-            const midX = video.videoWidth / 2;
-
-            // Draw Divider Line
-            const screenMidX = canvas.width / 2;
-            ctx.beginPath();
-            ctx.setLineDash([5, 5]);
-            ctx.moveTo(screenMidX, 0);
-            ctx.lineTo(screenMidX, canvas.height);
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-            ctx.setLineDash([]);
 
             let hasPerson = false;
+            let detectedViolations = 0;
 
             predictions.forEach(prediction => {
                 if (prediction.class === 'person') {
                     hasPerson = true;
-                    // Smart Demo Logic: Position determines compliance
-                    // Left side = Green (Safe), Right side = Red (Unsafe)
-                    const centerX = prediction.bbox[0] + prediction.bbox[2] / 2;
-                    const isUnsafe = centerX > midX;
+                    // Randomized Simulation Logic
+                    // Use bbox coordinates to create a consistent hash for "pseudo-random" safety
+                    // This way a person stays safe/unsafe usually
+                    const idSum = Math.floor(prediction.bbox[0] + prediction.bbox[1]);
+                    const isUnsafe = (idSum % 10) > 6; // 30% chance of unsafe
 
                     const color = isUnsafe ? '#ff4444' : '#00ff00'; // Red or Green
-                    const label = isUnsafe ? 'NO PPE (Danger Zone)' : 'PPE Compliant';
+                    const label = isUnsafe ? 'NO PPE DETECTED' : 'PPE OK';
+
+                    if (isUnsafe) detectedViolations++;
 
                     // Scale bounding box
                     const x = prediction.bbox[0] * scaleX;
@@ -462,7 +458,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     // Draw Label Background
                     ctx.fillStyle = color;
-                    ctx.fillRect(x, y - 25, 160, 25);
+                    ctx.fillRect(x, y - 25, 140, 25);
 
                     // Draw Label Text
                     ctx.fillStyle = '#ffffff';
@@ -472,8 +468,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             // --- Gallery Snapshot Logic ---
+            // Capture frame if we found people (every 2.5 seconds)
             const now = Date.now();
-            if (hasPerson && (now - lastSnapshotTime > 3000)) { // Capture every 3 seconds if person detected
+            if (hasPerson && (now - lastSnapshotTime > 2500)) {
                 lastSnapshotTime = now;
                 const galleryGrid = document.querySelector('.gallery-grid');
 
@@ -486,18 +483,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Draw video frame
                 snapCtx.drawImage(video, 0, 0, 300, 200);
 
-                // Draw overlay (simplified)
+                // Draw overlay (bounding boxes)
                 snapCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, 300, 200);
 
                 const item = document.createElement('div');
                 item.className = 'gallery-item glass-card visible fade-in';
+                const timeStr = new Date().toLocaleTimeString();
+
                 item.innerHTML = `
                     <img src="${snapCanvas.toDataURL()}" alt="Simulated Detection">
-                    <div class="overlay"><span>Live Detection</span></div>
+                    <div class="overlay"><span>Scanned: ${timeStr}</span></div>
                 `;
 
+                // Lightbox
                 item.addEventListener('click', () => {
-                    // Simple lightbox reusing existing logic
                     const overlay = document.createElement('div');
                     overlay.style.position = 'fixed';
                     overlay.style.inset = '0';
@@ -520,7 +519,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 galleryGrid.prepend(item);
 
-                // Limit gallery items
+                // Keep gallery clean
                 if (galleryGrid.children.length > 20) {
                     galleryGrid.removeChild(galleryGrid.children[20]);
                 }
