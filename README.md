@@ -42,6 +42,10 @@ python3 start_localhost.py
 - Frontend: http://localhost:8000
 - Backend: http://localhost:5001
 
+### Cloud Demo (Vercel)
+- **URL**: https://ppe-safety-detection-ai.vercel.app
+- **Note**: Runs in **Client-Side Demo Mode** using TensorFlow.js (simulated safety checks) as typical serverless environments do not support GPU-heavy YOLO models.
+
 ## Configuration
 - `--conf-helmet`: Detection threshold (default: 0.65)
 - `--conf-vest`: Detection threshold (default: 0.70)

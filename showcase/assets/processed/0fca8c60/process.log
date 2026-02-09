@@ -1,0 +1,5 @@
+2026-02-09 21:47:29,664 - INFO - Person detector: Ultralytics
+2026-02-09 21:47:30,418 - INFO - PPE Ultralytics model loaded
+2026-02-09 21:47:30,418 - INFO - Monitor initialized.
+2026-02-09 21:47:30,508 - INFO - Saving annotated video to showcase/assets/processed/0fca8c60/output.mp4
+2026-02-09 21:47:53,842 - INFO - Processed 37 frames at 1.59 FPS
