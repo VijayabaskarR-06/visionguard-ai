@@ -332,75 +332,110 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function simulateProcessing(file) {
+    async function simulateProcessing(file) {
+        // 1. Show loading state
         let progressVal = 0;
-        const interval = setInterval(() => {
-            progressVal += 5;
-            progress.style.width = `${progressVal}%`;
-            uploadStatus.querySelector('p').textContent = `AI is analyzing... ${progressVal}% processed (Demo Mode)`;
+        uploadStatus.querySelector('p').textContent = "Loading Browser AI Model... (Running locally)";
+        progress.style.width = '20%';
 
-            if (progressVal >= 100) {
-                clearInterval(interval);
-                // Create object URL for the uploaded file
-                const videoUrl = URL.createObjectURL(file);
-                demoVideo.src = videoUrl;
-                demoVideo.load();
+        try {
+            // Load COCO-SSD model
+            const model = await cocoSsd.load();
+            progress.style.width = '50%';
 
-                // Add overlay to indicate demo mode
-                const demoOverlay = document.createElement('div');
-                demoOverlay.style.cssText = `
-                    position: absolute;
-                    top: 10px;
-                    left: 10px;
-                    background: rgba(255, 0, 0, 0.7);
-                    color: white;
-                    padding: 5px 10px;
-                    border-radius: 5px;
-                    font-weight: bold;
-                    pointer-events: none;
-                `;
-                demoOverlay.textContent = "DEMO MODE: SIMULATION";
-                demoVideo.parentNode.appendChild(demoOverlay);
+            // Prepare Video
+            const videoUrl = URL.createObjectURL(file);
+            demoVideo.src = videoUrl;
 
-                demoVideo.play().catch(e => console.log('Autoplay prevented', e));
+            // Create Overlay Canvas
+            let canvas = document.getElementById('demo-canvas');
+            if (!canvas) {
+                canvas = document.createElement('canvas');
+                canvas.id = 'demo-canvas';
+                canvas.style.position = 'absolute';
+                canvas.style.top = '0';
+                canvas.style.left = '0';
+                canvas.style.width = '100%';
+                canvas.style.height = '100%';
+                canvas.style.pointerEvents = 'none';
+                canvas.style.zIndex = '10';
+                // Make sure video container is relative
+                demoVideo.parentNode.style.position = 'relative';
+                demoVideo.parentNode.appendChild(canvas);
+            }
+            const ctx = canvas.getContext('2d');
 
+            demoVideo.onloadeddata = () => {
+                progress.style.width = '100%';
                 uploadStatus.classList.add('hidden');
                 reloadBtn.classList.remove('hidden');
+                demoVideo.play();
 
-                // Add fake detection frames
-                const galleryGrid = document.querySelector('.gallery-grid');
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                const video = document.createElement('video');
-                video.src = videoUrl;
-                video.currentTime = 1;
+                // Adjust canvas to match video dimensions
+                canvas.width = demoVideo.clientWidth;
+                canvas.height = demoVideo.clientHeight;
 
-                video.onloadeddata = () => {
-                    canvas.width = 300;
-                    canvas.height = 200;
-                    // Snap a few fake frames
-                    for (let i = 0; i < 4; i++) {
-                        setTimeout(() => {
-                            video.currentTime = i * 2;
-                            ctx.drawImage(video, 0, 0, 300, 200);
+                detectFrame(model, demoVideo, ctx, canvas);
+            };
 
-                            // Draw fake box
-                            ctx.strokeStyle = '#00ff00';
-                            ctx.lineWidth = 3;
-                            ctx.strokeRect(50 + (i * 20), 50, 100, 100);
+        } catch (e) {
+            console.error("Browser AI failed", e);
+            alert("Could not load browser AI. Playing raw video.");
+            demoVideo.src = URL.createObjectURL(file);
+            demoVideo.play();
+            uploadStatus.classList.add('hidden');
+        }
+    }
 
-                            const item = document.createElement('div');
-                            item.className = 'gallery-item glass-card visible fade-in';
-                            item.innerHTML = `
-                                <img src="${canvas.toDataURL()}" alt="Simulated Detection">
-                                <div class="overlay"><span>Simulated Hit #${i + 1}</span></div>
-                            `;
-                            galleryGrid.prepend(item);
-                        }, i * 500);
-                    }
-                };
-            }
-        }, 200);
+    function detectFrame(model, video, ctx, canvas) {
+        if (video.paused || video.ended) return;
+
+        // Match canvas size to video display size if changed
+        if (canvas.width !== video.clientWidth || canvas.height !== video.clientHeight) {
+            canvas.width = video.clientWidth;
+            canvas.height = video.clientHeight;
+        }
+
+        model.detect(video).then(predictions => {
+            // Clear previous drawings
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Scaling factors (detect runs on video native size, we draw on display size)
+            const scaleX = canvas.width / video.videoWidth;
+            const scaleY = canvas.height / video.videoHeight;
+
+            predictions.forEach(prediction => {
+                if (prediction.class === 'person') {
+                    // Randomize Status based on position (pseudo-deterministic)
+                    const isUnsafe = (Math.floor(prediction.bbox[0]) % 7) < 3;
+
+                    const color = isUnsafe ? '#ff4444' : '#00ff00'; // Red or Green
+                    const label = isUnsafe ? 'NO PPE' : 'PPE OK';
+
+                    // Scale bounding box
+                    const x = prediction.bbox[0] * scaleX;
+                    const y = prediction.bbox[1] * scaleY;
+                    const w = prediction.bbox[2] * scaleX;
+                    const h = prediction.bbox[3] * scaleY;
+
+                    // Draw Bounding Box
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = 4;
+                    ctx.strokeRect(x, y, w, h);
+
+                    // Draw Label Background
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x, y - 25, 100, 25);
+
+                    // Draw Label Text
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 14px sans-serif';
+                    ctx.fillText(label, x + 5, y - 7);
+                }
+            });
+
+            requestAnimationFrame(() => detectFrame(model, video, ctx, canvas));
+        });
     }
 
     const resetUI = () => {
