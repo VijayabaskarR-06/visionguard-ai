@@ -405,6 +405,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    let lastSnapshotTime = 0;
+
     function detectFrame(model, video, ctx, canvas) {
         if (video.paused || video.ended) return;
 
@@ -434,8 +436,11 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.stroke();
             ctx.setLineDash([]);
 
+            let hasPerson = false;
+
             predictions.forEach(prediction => {
                 if (prediction.class === 'person') {
+                    hasPerson = true;
                     // Smart Demo Logic: Position determines compliance
                     // Left side = Green (Safe), Right side = Red (Unsafe)
                     const centerX = prediction.bbox[0] + prediction.bbox[2] / 2;
@@ -465,6 +470,61 @@ document.addEventListener('DOMContentLoaded', () => {
                     ctx.fillText(label, x + 5, y - 7);
                 }
             });
+
+            // --- Gallery Snapshot Logic ---
+            const now = Date.now();
+            if (hasPerson && (now - lastSnapshotTime > 3000)) { // Capture every 3 seconds if person detected
+                lastSnapshotTime = now;
+                const galleryGrid = document.querySelector('.gallery-grid');
+
+                // create distinct canvas for snapshot
+                const snapCanvas = document.createElement('canvas');
+                snapCanvas.width = 300;
+                snapCanvas.height = 200;
+                const snapCtx = snapCanvas.getContext('2d');
+
+                // Draw video frame
+                snapCtx.drawImage(video, 0, 0, 300, 200);
+
+                // Draw overlay (simplified)
+                snapCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, 300, 200);
+
+                const item = document.createElement('div');
+                item.className = 'gallery-item glass-card visible fade-in';
+                item.innerHTML = `
+                    <img src="${snapCanvas.toDataURL()}" alt="Simulated Detection">
+                    <div class="overlay"><span>Live Detection</span></div>
+                `;
+
+                item.addEventListener('click', () => {
+                    // Simple lightbox reusing existing logic
+                    const overlay = document.createElement('div');
+                    overlay.style.position = 'fixed';
+                    overlay.style.inset = '0';
+                    overlay.style.background = 'rgba(0,0,0,0.9)';
+                    overlay.style.display = 'flex';
+                    overlay.style.alignItems = 'center';
+                    overlay.style.justifyContent = 'center';
+                    overlay.style.zIndex = '1000';
+                    overlay.style.cursor = 'zoom-out';
+
+                    const img = document.createElement('img');
+                    img.src = snapCanvas.toDataURL();
+                    img.style.maxWidth = '90%';
+                    img.style.maxHeight = '90%';
+
+                    overlay.appendChild(img);
+                    overlay.onclick = () => overlay.remove();
+                    document.body.appendChild(overlay);
+                });
+
+                galleryGrid.prepend(item);
+
+                // Limit gallery items
+                if (galleryGrid.children.length > 20) {
+                    galleryGrid.removeChild(galleryGrid.children[20]);
+                }
+            }
 
             requestAnimationFrame(() => detectFrame(model, video, ctx, canvas));
         });
