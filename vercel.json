@@ -1,0 +1,15 @@
+{
+    "version": 2,
+    "name": "ppe-safety-detection-ai",
+    "public": true,
+    "rewrites": [
+        {
+            "source": "/(.*)",
+            "destination": "/showcase/$1"
+        },
+        {
+            "source": "/",
+            "destination": "/showcase/index.html"
+        }
+    ]
+}

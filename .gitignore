@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+
+# Data & Output
+dataset/
+uploads/*
+!uploads/.gitkeep
+output/*
+!output/.gitkeep
+output_gif_run/
+output_rerun/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Models (optional to ignore if they are very large, but 5MB is fine)
+# *.pt
+# *.onnx
+
+# Local env
+.env

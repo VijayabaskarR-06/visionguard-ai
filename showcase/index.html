@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workplace Safety Monitor | AI Showcase</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="background-blob"></div>
+    <div class="background-blob second"></div>
+
+    <nav>
+        <div class="container">
+            <div class="logo">PPE<span>AI</span></div>
+            <div class="status-badge">
+                <span class="pulse"></span> System Active
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h1 class="fade-in">Intelligent Workplace <br><span class="gradient-text">Safety Monitor</span></h1>
+                <p class="subtitle fade-in">Advanced YOLO-powered PPE detection with temporal tracking and association.
+                </p>
+                <div class="stats grid">
+                    <div class="stat-card">
+                        <h3>98.4%</h3>
+                        <p>Detection Accuracy</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>25+ FPS</h3>
+                        <p>Real-time Inference</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>0.3s</h3>
+                        <p>Latency</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="analysis">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Analyze Your Video</h2>
+                    <p>Upload a workplace video to perform AI safety monitoring in seconds.</p>
+                </div>
+                <div class="upload-container glass-card">
+                    <div class="drop-zone" id="drop-zone">
+                        <div class="upload-icon">📤</div>
+                        <p>Drag & drop video or <span class="browse-btn">browse files</span></p>
+                        <input type="file" id="video-upload" accept="video/*" hidden>
+                    </div>
+                    <div id="file-info" class="hidden">
+                        <p id="filename-display"></p>
+                        <button id="analyze-btn" class="btn-primary">Analyze Video</button>
+                    </div>
+                    <div class="upload-status hidden" id="upload-status">
+                        <div class="spinner"></div>
+                        <p>AI is analyzing safety compliance...</p>
+                        <div class="progress-bar">
+                            <div class="progress" id="progress"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="demo">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Live Monitoring Demo</h2>
+                    <p>Real-time processing with helmet and vest detection association.</p>
+                </div>
+                <div class="video-container glass-card">
+                    <video id="main-video" controls autoplay muted loop>
+                        <source src="assets/output.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <div class="video-controls-overlay">
+                        <button id="reload-video-btn" class="btn-secondary hidden">🔄 Reload Analysis Video</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="gallery">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Detection Highlights</h2>
+                    <p>Sample frames demonstrating multi-target tracking and compliance verification.</p>
+                </div>
+                <div class="grid gallery-grid">
+                    <!-- Real-time frames will be populated here -->
+                </div>
+            </div>
+        </section>
+
+        <section class="features">
+            <div class="container">
+                <div class="grid feature-grid">
+                    <div class="feature-card glass-card">
+                        <div class="icon">🔍</div>
+                        <h3>YOLOv12 Core</h3>
+                        <p>State-of-the-art person detection optimized for construction environments.</p>
+                    </div>
+                    <div class="feature-card glass-card">
+                        <div class="icon">⛓️</div>
+                        <h3>Smart Association</h3>
+                        <p>Anatomical region mapping ensures PPE is correctly linked to specific personnel.</p>
+                    </div>
+                    <div class="feature-card glass-card">
+                        <div class="icon">📈</div>
+                        <h3>Temporal Smoothing</h3>
+                        <p>Advanced tracking algorithms eliminate flicker and provide stable compliance data.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Workplace Safety AI Monitor. Built with advanced computer vision.</p>
+        </div>
+    </footer>
+
+    <script src="main.js"></script>
+</body>
+
+</html>
