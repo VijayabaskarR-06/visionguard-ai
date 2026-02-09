@@ -148,7 +148,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData();
         formData.append('video', file);
 
+        // Detect if running on Vercel (no backend on same host)
+        const isVercel = window.location.hostname.includes('vercel.app');
+        const apiBase = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? `http://${window.location.hostname}:5001` : '';
+
+        // If on Vercel or no API base, use Demo Mode
+        if (isVercel || !apiBase) {
+            console.log("Running in Demo Mode (Backend unavailable)");
+            simulateProcessing(file);
+            return;
+        }
+
         let isProcessing = true;
+        // ... rest of real upload logic ...
         let frameCount = 0;
         let lastFoundFrame = -1;
 
@@ -318,6 +330,77 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Upload failed: ' + error.message);
             resetUI();
         }
+    }
+
+    function simulateProcessing(file) {
+        let progressVal = 0;
+        const interval = setInterval(() => {
+            progressVal += 5;
+            progress.style.width = `${progressVal}%`;
+            uploadStatus.querySelector('p').textContent = `AI is analyzing... ${progressVal}% processed (Demo Mode)`;
+
+            if (progressVal >= 100) {
+                clearInterval(interval);
+                // Create object URL for the uploaded file
+                const videoUrl = URL.createObjectURL(file);
+                demoVideo.src = videoUrl;
+                demoVideo.load();
+
+                // Add overlay to indicate demo mode
+                const demoOverlay = document.createElement('div');
+                demoOverlay.style.cssText = `
+                    position: absolute;
+                    top: 10px;
+                    left: 10px;
+                    background: rgba(255, 0, 0, 0.7);
+                    color: white;
+                    padding: 5px 10px;
+                    border-radius: 5px;
+                    font-weight: bold;
+                    pointer-events: none;
+                `;
+                demoOverlay.textContent = "DEMO MODE: SIMULATION";
+                demoVideo.parentNode.appendChild(demoOverlay);
+
+                demoVideo.play().catch(e => console.log('Autoplay prevented', e));
+
+                uploadStatus.classList.add('hidden');
+                reloadBtn.classList.remove('hidden');
+
+                // Add fake detection frames
+                const galleryGrid = document.querySelector('.gallery-grid');
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const video = document.createElement('video');
+                video.src = videoUrl;
+                video.currentTime = 1;
+
+                video.onloadeddata = () => {
+                    canvas.width = 300;
+                    canvas.height = 200;
+                    // Snap a few fake frames
+                    for (let i = 0; i < 4; i++) {
+                        setTimeout(() => {
+                            video.currentTime = i * 2;
+                            ctx.drawImage(video, 0, 0, 300, 200);
+
+                            // Draw fake box
+                            ctx.strokeStyle = '#00ff00';
+                            ctx.lineWidth = 3;
+                            ctx.strokeRect(50 + (i * 20), 50, 100, 100);
+
+                            const item = document.createElement('div');
+                            item.className = 'gallery-item glass-card visible fade-in';
+                            item.innerHTML = `
+                                <img src="${canvas.toDataURL()}" alt="Simulated Detection">
+                                <div class="overlay"><span>Simulated Hit #${i + 1}</span></div>
+                            `;
+                            galleryGrid.prepend(item);
+                        }, i * 500);
+                    }
+                };
+            }
+        }, 200);
     }
 
     const resetUI = () => {
