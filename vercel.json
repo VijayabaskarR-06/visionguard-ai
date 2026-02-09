@@ -1,15 +1,8 @@
 {
     "version": 2,
-    "name": "ppe-safety-detection-ai",
+    "name": "visionguard-ai",
     "public": true,
-    "rewrites": [
-        {
-            "source": "/(.*)",
-            "destination": "/showcase/$1"
-        },
-        {
-            "source": "/",
-            "destination": "/showcase/index.html"
-        }
-    ]
+    "cleanUrls": true,
+    "trailingSlash": false,
+    "outputDirectory": "showcase"
 }

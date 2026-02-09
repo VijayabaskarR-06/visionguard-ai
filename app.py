@@ -7,7 +7,7 @@ from flask_cors import CORS
 from pathlib import Path
 
 app = Flask(__name__)
-# Enable CORS for all routes and origins for the showcase demo
+
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 UPLOAD_FOLDER = 'uploads'
@@ -15,7 +15,7 @@ PROCESSED_FOLDER = os.path.join('showcase', 'assets', 'processed')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(PROCESSED_FOLDER, exist_ok=True)
 
-# Track active processes
+
 processes = {}
 
 @app.route('/upload', methods=['POST'])
@@ -30,17 +30,17 @@ def upload_video():
     if file.filename == '':
         return jsonify({"error": "No selected file"}), 400
 
-    # Generate unique ID for this processing task
+    
     task_id = str(uuid.uuid4())[:8]
     filename = f"{task_id}_{file.filename}"
     filepath = os.path.join(UPLOAD_FOLDER, filename)
     file.save(filepath)
 
-    # Define output directory for this task
+    
     output_dir = os.path.join(PROCESSED_FOLDER, task_id)
     os.makedirs(output_dir, exist_ok=True)
 
-    # Run the AI monitor as a subprocess asynchronously
+    
     try:
         cmd = [
             sys.executable, "workplace_safety_monitor.py",
@@ -51,7 +51,7 @@ def upload_video():
         ]
         
         print(f"Starting async command: {' '.join(cmd)}")
-        # Start the process in the background and capture stderr to a file for debugging
+        
         log_file = open(os.path.join(output_dir, "process.log"), "w")
         process = subprocess.Popen(cmd, stdout=log_file, stderr=subprocess.STDOUT)
         processes[task_id] = (process, log_file)
@@ -71,10 +71,10 @@ def upload_video():
 @app.route('/status/<task_id>')
 def get_status(task_id):
     if task_id not in processes:
-        # Check if dir exists to see if it was a previously completed task
+        
         output_dir = os.path.join(PROCESSED_FOLDER, task_id)
         if os.path.exists(output_dir):
-            # Check for success file or check if output.mp4 exists as a proxy for success
+            
             if os.path.exists(os.path.join(output_dir, "success.txt")):
                 return jsonify({"status": "completed"})
             if os.path.exists(os.path.join(output_dir, "error.txt")):
@@ -84,7 +84,7 @@ def get_status(task_id):
                 except:
                     return jsonify({"status": "failed", "error": "Unknown previous failure"})
             
-            # If neither exist but output.mp4 does, assume it was an old successful run
+            
             if os.path.exists(os.path.join(output_dir, "output.mp4")):
                 return jsonify({"status": "completed"})
                 
@@ -93,19 +93,19 @@ def get_status(task_id):
     process, log_file = processes[task_id]
     poll = process.poll()
     
-    # Calculate current progress based on frame count
+    
     output_dir = os.path.join(PROCESSED_FOLDER, task_id)
     frames_count = len([f for f in os.listdir(output_dir) if f.startswith('frame_') and f.endswith('.jpg')])
     
     if poll is None:
         return jsonify({"status": "processing", "frames": frames_count})
     else:
-        # Process finished
+        
         log_file.close()
         return_code = poll
         del processes[task_id]
         
-        # Read the log to check for errors if failed
+        
         error_msg = ""
         if return_code != 0:
             try:
@@ -128,7 +128,7 @@ def serve_assets(filename):
 @app.route('/assets/processed/<path:task_id>/<path:filename>')
 def serve_processed(task_id, filename):
     directory = os.path.join(PROCESSED_FOLDER, task_id)
-    # Check if file is a video or image
+    
     mimetype = 'video/mp4' if filename.endswith('.mp4') else 'image/jpeg'
     return send_from_directory(directory, filename, mimetype=mimetype)
 
