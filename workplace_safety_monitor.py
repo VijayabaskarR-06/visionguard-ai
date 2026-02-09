@@ -276,8 +276,8 @@ class IoUTracker:
         return {tid: tr.box for tid, tr in self.tracks.items()}
 @dataclass
 class AssocConfig:
-    conf_helmet: float = 0.65
-    conf_vest: float = 0.70
+    conf_helmet: float = 0.50
+    conf_vest: float = 0.50
     nms_iou: float = 0.50
     min_box_area: int = 30 * 30
     max_aspect_ratio: float = 3.5       
@@ -550,8 +550,8 @@ def build_argparser() -> argparse.Namespace:
     p.add_argument('--ppe-onnx', type=str, default='', help='YOLOv7 ONNX model for PPE')
     p.add_argument('--class-names', nargs='*', default=['helmet', 'vest'], help='Class names for ONNX model')
     p.add_argument('--input-size', type=int, default=640, help='ONNX input size (square)')
-    p.add_argument('--conf-helmet', type=float, default=0.65)
-    p.add_argument('--conf-vest', type=float, default=0.70)
+    p.add_argument('--conf-helmet', type=float, default=0.50)
+    p.add_argument('--conf-vest', type=float, default=0.50)
     p.add_argument('--nms-iou', type=float, default=0.50)
     p.add_argument('--min-box-area', type=int, default=30*30)
     p.add_argument('--max-aspect-ratio', type=float, default=3.5)
