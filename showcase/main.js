@@ -375,6 +375,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 canvas.width = demoVideo.clientWidth;
                 canvas.height = demoVideo.clientHeight;
 
+                // Add Overlay Explanation
+                const demoOverlay = document.createElement('div');
+                demoOverlay.style.cssText = `
+                    position: absolute;
+                    top: 10px;
+                    left: 10px;
+                    background: rgba(0, 0, 0, 0.8);
+                    color: white;
+                    padding: 8px 12px;
+                    border-radius: 6px;
+                    font-size: 14px;
+                    pointer-events: none;
+                    z-index: 20;
+                    border-left: 4px solid #facc15;
+                `;
+                demoOverlay.innerHTML = '<strong>DEMO MODE:</strong><br>Left Side = <span style="color:#4ade80">Secure</span> | Right Side = <span style="color:#f87171">Danger</span>';
+                demoVideo.parentNode.appendChild(demoOverlay);
+
                 detectFrame(model, demoVideo, ctx, canvas);
             };
 
@@ -400,17 +418,31 @@ document.addEventListener('DOMContentLoaded', () => {
             // Clear previous drawings
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Scaling factors (detect runs on video native size, we draw on display size)
+            // Scaling factors
             const scaleX = canvas.width / video.videoWidth;
             const scaleY = canvas.height / video.videoHeight;
+            const midX = video.videoWidth / 2;
+
+            // Draw Divider Line
+            const screenMidX = canvas.width / 2;
+            ctx.beginPath();
+            ctx.setLineDash([5, 5]);
+            ctx.moveTo(screenMidX, 0);
+            ctx.lineTo(screenMidX, canvas.height);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.setLineDash([]);
 
             predictions.forEach(prediction => {
                 if (prediction.class === 'person') {
-                    // Randomize Status based on position (pseudo-deterministic)
-                    const isUnsafe = (Math.floor(prediction.bbox[0]) % 7) < 3;
+                    // Smart Demo Logic: Position determines compliance
+                    // Left side = Green (Safe), Right side = Red (Unsafe)
+                    const centerX = prediction.bbox[0] + prediction.bbox[2] / 2;
+                    const isUnsafe = centerX > midX;
 
                     const color = isUnsafe ? '#ff4444' : '#00ff00'; // Red or Green
-                    const label = isUnsafe ? 'NO PPE' : 'PPE OK';
+                    const label = isUnsafe ? 'NO PPE (Danger Zone)' : 'PPE Compliant';
 
                     // Scale bounding box
                     const x = prediction.bbox[0] * scaleX;
@@ -425,11 +457,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     // Draw Label Background
                     ctx.fillStyle = color;
-                    ctx.fillRect(x, y - 25, 100, 25);
+                    ctx.fillRect(x, y - 25, 160, 25);
 
                     // Draw Label Text
                     ctx.fillStyle = '#ffffff';
-                    ctx.font = 'bold 14px sans-serif';
+                    ctx.font = 'bold 13px sans-serif';
                     ctx.fillText(label, x + 5, y - 7);
                 }
             });
